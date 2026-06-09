@@ -1,0 +1,85 @@
+# =============================================================================
+# PS5 Availability Tracker — configuration
+# =============================================================================
+# Edit this file to control WHAT is tracked and WHERE. Secrets (Telegram token,
+# etc.) go in the .env file instead — never put secrets here.
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Products to track. Each product has:
+#   name   : friendly label used in notifications
+#   query  : the search term sent to each platform's search
+#   match  : (optional) list of lowercase substrings; a search result counts as
+#            this product only if its title contains ALL of these. Helps avoid
+#            matching accessories ("PS5 controller") when you want the console.
+# ---------------------------------------------------------------------------
+products:
+  - name: "PS5 Slim Disc Console"
+    query: "PS5 console"
+    match: ["ps5", "console"]
+    exclude: ["controller", "cover", "skin", "stand", "charging", "game", "headset"]
+
+  # Add more products here, e.g.:
+  # - name: "PS5 Pro"
+  #   query: "PS5 Pro"
+  #   match: ["ps5", "pro"]
+  #   exclude: ["controller", "cover", "game"]
+
+# ---------------------------------------------------------------------------
+# Locations to check. Quick-commerce platforms (Blinkit/Zepto/Instamart/
+# BigBasket) serve based on lat/lon, NOT pincode, so each location needs
+# coordinates. Look them up once (e.g. google "<area> latitude longitude")
+# and paste here. Amazon/Flipkart only need the pincode.
+# ---------------------------------------------------------------------------
+locations:
+  - name: "Bengaluru - Koramangala"
+    pincode: "560034"
+    lat: 12.9352
+    lon: 77.6245
+
+  - name: "Mumbai - Bandra West"
+    pincode: "400050"
+    lat: 19.0596
+    lon: 72.8295
+
+  - name: "Delhi - Saket"
+    pincode: "110017"
+    lat: 28.5245
+    lon: 77.2066
+
+# ---------------------------------------------------------------------------
+# Platforms to check. Set enabled: false to skip one.
+#   method: "api" platforms use direct HTTP; "browser" platforms drive a
+#   headless Chromium via Playwright (slower, heavier, more resilient).
+# ---------------------------------------------------------------------------
+platforms:
+  blinkit:    { enabled: true }
+  zepto:      { enabled: true }
+  instamart:  { enabled: true }
+  bigbasket:  { enabled: true }
+  amazon:     { enabled: true }
+  flipkart:   { enabled: true }
+
+# ---------------------------------------------------------------------------
+# Notification behavior.
+#   notify_mode:
+#     "always"        -> send a full report every run (good while testing)
+#     "on_available"  -> only ping when at least one item is IN STOCK
+#     "on_change"     -> only ping when availability changed vs the last run
+# ---------------------------------------------------------------------------
+notifications:
+  notify_mode: "always"
+  channel: "telegram"
+
+# ---------------------------------------------------------------------------
+# Runtime tuning.
+# ---------------------------------------------------------------------------
+runtime:
+  # seconds to wait between requests to the SAME platform (politeness / anti-ban)
+  per_request_delay: 2.0
+  # max platforms to query concurrently
+  concurrency: 3
+  # per-platform timeout in seconds
+  timeout: 30
+  # where to store the last-run snapshot (used by notify_mode: on_change)
+  state_file: "state.json"

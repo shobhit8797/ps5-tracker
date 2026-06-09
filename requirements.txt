@@ -1,0 +1,9 @@
+# Minimum versions; unpinned upper bound so it installs across Python releases.
+# NOTE: Playwright (used for Amazon/Flipkart) currently has best wheel support on
+# Python 3.10–3.12. If `playwright install` fails on a very new Python, use one of
+# those versions for the venv (e.g. `python3.12 -m venv .venv`).
+httpx[http2]>=0.27
+playwright>=1.40
+PyYAML>=6.0
+python-dotenv>=1.0
+tenacity>=8.2
