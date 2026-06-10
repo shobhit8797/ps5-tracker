@@ -51,13 +51,19 @@ detection, geo-gating). Practical implications:
 
 ```bash
 cd ps5-tracker
-./scripts/setup.sh          # creates .venv, installs deps + Playwright Chromium
+uv sync
+uv run playwright install chromium
+[ -f .env ] || cp .env.example .env
 ```
+
+If you do not have `uv` installed yet, `./scripts/setup.sh` can still create
+`.venv` with `pip` as a fallback. When `uv` is available, that script runs the
+same `uv sync` + Playwright setup commands for you.
 
 Then:
 
 ### 1. Telegram credentials → `.env`
-`setup.sh` copies `.env.example` to `.env`. Fill in:
+The setup command above copies `.env.example` to `.env` if needed. Fill in:
 
 - `TELEGRAM_BOT_TOKEN` — message [@BotFather](https://t.me/BotFather), send
   `/newbot`, copy the token.
@@ -67,8 +73,7 @@ Then:
 
 Verify it works:
 ```bash
-source .venv/bin/activate
-python run.py --test-telegram
+uv run ps5-tracker --test-telegram
 ```
 
 ### 2. Products & locations → `config.yaml`
@@ -85,9 +90,9 @@ python run.py --test-telegram
 
 ### 3. Try a dry run (no Telegram send)
 ```bash
-python run.py --dry-run
+uv run ps5-tracker --dry-run
 # or limit platforms:
-python run.py --dry-run --platform amazon --platform blinkit
+uv run ps5-tracker --dry-run --platform amazon --platform blinkit
 ```
 
 ---
@@ -111,8 +116,9 @@ crontab -e
 0 10,20 * * * /Users/shobhit/personal/ps5-tracker/scripts/run_tracker.sh
 ```
 
-`run_tracker.sh` activates the venv, runs one pass, and appends output to
-`tracker.log` in the project folder. Check that file to debug scheduled runs.
+`run_tracker.sh` runs `uv run ps5-tracker` when `uv` is available, otherwise it
+activates `.venv`, runs one pass, and appends output to `tracker.log` in the
+project folder. Check that file to debug scheduled runs.
 
 > **macOS note:** cron needs Full Disk Access on recent macOS. If cron jobs
 > silently don't run, grant `/usr/sbin/cron` Full Disk Access in
@@ -125,11 +131,14 @@ crontab -e
 
 | Command | What it does |
 |---|---|
-| `python run.py` | Run all checks, notify per config |
-| `python run.py --dry-run` | Run checks, print report, **don't** send |
-| `python run.py --test-telegram` | Send a test message and exit |
-| `python run.py --platform zepto --platform amazon` | Restrict to specific platforms |
-| `python run.py -v` | Verbose logging |
+| `uv run ps5-tracker` | Run all checks, notify per config |
+| `uv run ps5-tracker --dry-run` | Run checks, print report, **don't** send |
+| `uv run ps5-tracker --test-telegram` | Send a test message and exit |
+| `uv run ps5-tracker --platform zepto --platform amazon` | Restrict to specific platforms |
+| `uv run ps5-tracker -v` | Verbose logging |
+
+`python run.py ...` still works from the project root if you already have an
+activated environment.
 
 ---
 
@@ -140,6 +149,8 @@ ps5-tracker/
 ├── config.yaml              # WHAT/WHERE to track (edit this)
 ├── .env                     # secrets: Telegram token + chat id (you create)
 ├── run.py                   # CLI entrypoint
+├── pyproject.toml           # uv / package metadata
+├── .python-version          # default Python for uv
 ├── requirements.txt
 ├── scripts/
 │   ├── setup.sh             # one-time install

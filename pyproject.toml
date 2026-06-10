@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ps5-tracker"
+dynamic = ["version"]
+description = "PS5 availability tracker across Indian e-commerce and quick-commerce platforms."
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "httpx[http2]>=0.27",
+    "playwright>=1.40",
+    "PyYAML>=6.0",
+    "python-dotenv>=1.0",
+    "tenacity>=8.2",
+]
+
+[project.scripts]
+ps5-tracker = "ps5tracker.cli:main"
+ps5tracker = "ps5tracker.cli:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "ps5tracker.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["ps5tracker*"]

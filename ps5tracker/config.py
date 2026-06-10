@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 import yaml
@@ -12,6 +12,13 @@ from dotenv import load_dotenv
 from .models import Location, Product
 
 ROOT = Path(__file__).resolve().parent.parent
+
+
+def _default_config_path() -> Path:
+    cwd_config = Path.cwd() / "config.yaml"
+    if cwd_config.exists():
+        return cwd_config
+    return ROOT / "config.yaml"
 
 
 @dataclass
@@ -32,10 +39,13 @@ class Settings:
         return [name for name, cfg in self.platforms.items() if cfg.get("enabled", True)]
 
 
-def load_settings(config_path: str | Path = ROOT / "config.yaml") -> Settings:
-    load_dotenv(ROOT / ".env")
+def load_settings(config_path: str | Path | None = None) -> Settings:
+    resolved_config = Path(config_path) if config_path else _default_config_path()
+    resolved_config = resolved_config.expanduser().resolve()
+    config_dir = resolved_config.parent
+    load_dotenv(config_dir / ".env")
 
-    with open(config_path, "r", encoding="utf-8") as fh:
+    with open(resolved_config, "r", encoding="utf-8") as fh:
         raw = yaml.safe_load(fh)
 
     products = [
@@ -66,6 +76,10 @@ def load_settings(config_path: str | Path = ROOT / "config.yaml") -> Settings:
     if not locations:
         raise ValueError("config.yaml: no locations defined")
 
+    state_file = Path(rt.get("state_file", "state.json"))
+    if not state_file.is_absolute():
+        state_file = config_dir / state_file
+
     return Settings(
         products=products,
         locations=locations,
@@ -75,7 +89,7 @@ def load_settings(config_path: str | Path = ROOT / "config.yaml") -> Settings:
         per_request_delay=float(rt.get("per_request_delay", 2.0)),
         concurrency=int(rt.get("concurrency", 3)),
         timeout=int(rt.get("timeout", 30)),
-        state_file=ROOT / rt.get("state_file", "state.json"),
+        state_file=state_file,
         telegram_token=os.getenv("TELEGRAM_BOT_TOKEN", ""),
         telegram_chat_id=os.getenv("TELEGRAM_CHAT_ID", ""),
     )
